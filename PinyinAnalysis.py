@@ -139,6 +139,7 @@ class PinyinAnalysis:
         if not run:  # 如果不现场运行，直接读取已有文件
             if not os.path.exists(res_filepath):
                 print("There is no analysis result, you need set 'run' to True and run again")
+                return
         else:
             self.run_save(res_filepath, pw_filepath)
 

@@ -1,4 +1,4 @@
-# 基础分析-英文单词的使用统计
+# 基础分析-拼音的使用统计
 import re
 import csv
 import os

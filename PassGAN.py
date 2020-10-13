@@ -7,8 +7,10 @@ import tensorflow as tf
 import numpy as np
 from PassGAN_lib import models
 import os
+import platform
 
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+if platform.system() == 'Darwin':
+    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 '''
 python PassGAN.py \
 	--input-dir pretrained \

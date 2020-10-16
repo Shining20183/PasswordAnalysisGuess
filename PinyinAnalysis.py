@@ -1,4 +1,4 @@
-# 基础分析-英文单词的使用统计
+# 基础分析-拼音的使用统计
 import re
 import csv
 import os
@@ -119,97 +119,80 @@ class PinyinAnalysis:
             self.tree.insert(line.split()[0])
         f.close()
 
-    def analysis2(self, data, run=False, show=True):
+    def analysis(self, data, run=False, show=True):
+        """
+        :param data:
+        :param run:
+        :param show:
+        :return:
+        """
         res_filepath = ''
         pw_filepath = ''
         if data == 'csdn':
-            res_filepath = 'analysis_result/pinyin_analysis/csdn_pinyin.txt'
+            # res_filepath = 'analysis_result/pinyin_analysis/csdn_pinyin.txt'
+            res_filepath = 'analysis_result/pinyin_analysis/csdn/'
             pw_filepath = 'data/csdn_pw.txt'
         elif data == 'yahoo':
-            res_filepath = 'analysis_result/pinyin_analysis/yahoo_pinyin.txt'
+            res_filepath = 'analysis_result/pinyin_analysis/yahoo/'
             pw_filepath = 'data/yahoo_pw.txt'
 
         if not run:  # 如果不现场运行，直接读取已有文件
             if not os.path.exists(res_filepath):
                 print("There is no analysis result, you need set 'run' to True and run again")
+                return
         else:
-            self.read_re(pw_filepath)
-            # 以下是存储运行结果的内容
+            self.run_save(res_filepath, pw_filepath)
 
         if show:
             if not os.path.exists(res_filepath):
-                self.read_re(pw_filepath)
-            # 以下为从已经存储的数据中读，显示要展示的内容
+                self.run_save(res_filepath, pw_filepath)
+            self.show_res(data, res_filepath)
 
+    def run_save(self, res_filepath, pw_filepath):
+        self.read_re(pw_filepath)
+        if not os.path.exists(res_filepath):
+            os.mkdir(res_filepath)
+        with open(res_filepath + 'subfreq.csv', 'w', newline='') as fin:
+            csv_writer = csv.writer(fin)
+            for item in self.subfreq:
+                line = [item[0], item[1]]
+                if self.upper.__contains__(item[0]):
+                    tmp = ''
+                    for item2 in self.upper[item[0]]:
+                        tmp = tmp + item2[0] + ':' + str(item2[1]) + ','
+                    line.append(tmp)
+                csv_writer.writerow(line)
+        with open(res_filepath + 'pinfreq.csv', 'w', newline='') as fin:
+            csv_writer = csv.writer(fin)
+            for item in self.pinyinfreq:
+                csv_writer.writerow([item[0], item[1]])
 
-
-
-    def analysis(self, data, save=False, show=True, ):
-        # 分析密码，并将分析结果写入文件
-        # save: False：不保存分析结果；True：保存分析结果
-        # show：True：打印分析结果；False：不打印分析结果
-        # data: csdn or yahoo
-
-        wfilepath = ''
-        rfilepath = ''
-        if data == 'csdn':
-            wfilepath = 'analysis_result/pinyin_analysis/csdn_pinyin.txt'
-            rfilepath = 'data/csdn_pw.txt'
-        elif data == 'yahoo':
-            wfilepath = 'analysis_result/pinyin_analysis/yahoo_pinyin.txt'
-            rfilepath = 'data/yahoo_pw.txt'
-
-        # 如果选择不保存，则
-        if not save:
-            pass
-
-
-
-
-
-
-
-        if save:
-
-            self.read_re(rfilepath)
-            with open(wfilepath, 'w') as file_obj:
-                # 向文件中写入top10的单个拼音
-                file_obj.write('========== Top 10 Single Pinyin in ' + data + ' ==========\n')
-                mat = "{:15}\t{:15}\t{:15}\t"
-                file_obj.write(mat.format('No', 'Pinyin', 'Freq') + 'Upper case\n')
-                count = 1
-                for item in self.subfreq:
-                    line = mat.format(str(count), item[0], str(item[1]))
-                    if self.upper.__contains__(item[0]):
-                        for item2 in self.upper[item[0]]:
-                            line = line + item2[0] + ' '
-                    line = line + '\n'
-                    file_obj.write(line)
-                    count += 1
-                    if count > 10:
-                        break
-                file_obj.write('==============================\n')
-                # 向文件中写入top10的一组拼音
-                file_obj.write('========== Top 10 Pinyin in ' + data + ' ==========\n')
-                mat = "{:15}\t{:15}\t{:15}\t"
-                file_obj.write(mat.format('No', 'Pinyin', 'Freq')+'\n')
-                count = 1
-                for item in self.pinyinfreq:
-                    line = mat.format(str(count), item[0], str(item[1])) + '\n'
-                    file_obj.write(line)
-                    count += 1
-                    if count > 10:
-                        break
-
-
-        if show and not save:  # 直接从文件中读取结果
-            if data == 'csdn':
-                filepath = 'analysis_result/pinyin_analysis/csdn_pinyin.txt'
-            elif data == 'yahoo':
-                filepath = 'analysis_result/pinyin_analysis/yahoo_pinyin.txt'
-            with open(filepath, 'r') as file_obj:
-                contents = file_obj.read()
-                print(contents)
+    def show_res(self, data, res_filepath):
+        print('========== Top 10 Single Pinyin in ' + data + ' ==========')
+        with open(res_filepath + 'subfreq.csv', 'r') as fout:
+            reader = csv.reader(fout)
+            mat = "{:15}\t{:15}\t{:15}\t"
+            print(mat.format('No', 'Pinyin', 'Freq') + 'Upper case')
+            num = 1
+            for row in reader:
+                tmp = mat.format(str(num), row[0], row[1])
+                if len(row)==3:
+                    tmp +=row[2]
+                print(tmp)
+                num +=1
+                if num>10:
+                    break
+        print('========== Top 10 Pinyin in ' + data + ' ==========')
+        with open(res_filepath + 'pinfreq.csv', 'r') as fout:
+            reader = csv.reader(fout)
+            mat = "{:15}\t{:15}\t{:15}\t"
+            print(mat.format('No', 'Pinyin', 'Freq'))
+            num = 1
+            for row in reader:
+                print(mat.format(str(num), row[0], row[1]))
+                num +=1
+                if num>10:
+                    break
 
     def sort_dict(self):
         # print('sort_dict')
@@ -265,4 +248,4 @@ class PinyinAnalysis:
 
 
 Ana = PinyinAnalysis()
-Ana.analysis('yahoo', save=True, show=False)
+Ana.analysis('csdn', run=False, show=True)

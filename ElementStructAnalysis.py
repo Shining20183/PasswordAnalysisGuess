@@ -2,8 +2,11 @@
 import re
 import os
 import collections
-
+from tqdm import tqdm
 class ElementStructAnalysis:
+    def __init__(self):
+        self.pattern1 = re.compile("[a-zA-Z]+")
+        self.pattern2 = re.compile("[0-9]+")
     def analysis(self, run=True, show=False, data='yahoo'):
         # 分析密码，并将分析结果写入文件
         # run: False：不保存分析结果；True：保存分析结果
@@ -100,33 +103,31 @@ class ElementStructAnalysis:
         symbol_lists = []
 
         with open("./data/" + data + "_pw.txt", "r") as fp:
-            for (num, password) in enumerate(fp):
+            c=fp.read().split('\n')
+            pbar=tqdm(total=len(c))
+            for password in c:
                 password = password.replace("\n", "")
                 if password.strip() == "":
                     continue
-                print("第" + str(num + 1) + "行密码: " + password)
 
-                pattern1 = re.compile("[a-zA-Z]+")
-                letter_strs = re.findall(pattern1, password)
+                letter_strs = re.findall(self.pattern1, password)
                 letter_strs.sort(key=lambda x: len(x), reverse=True)
-                letter_lists = letter_lists + letter_strs
-                # print(letter_lists)
+                letter_lists.extend(letter_strs)
 
-                pattern2 = re.compile("[0-9]+")
-                digit_strs = re.findall(pattern2, password)
+                digit_strs = re.findall(self.pattern2, password)
                 digit_strs.sort(key=lambda x: len(x), reverse=True)
-                digit_lists = digit_lists + digit_strs
+                digit_lists.extend(digit_strs)
                 # print(digit_lists)
 
                 symbol_strs = re.findall(r"\W+", password)
                 symbol_strs.sort(key=lambda x: len(x), reverse=True)
-                symbol_lists =symbol_lists + symbol_strs
+                symbol_lists.extend(symbol_strs)
                 # print(symbol_lists)
 
                 type = self.get_type(password, letter_strs, digit_strs, symbol_strs)
-                print("第" + str(num + 1) + "行类型: " + type)
                 struct_lists.append(type)
-                print(struct_lists)
+                pbar.update(1)
+            pbar.close()
 
         result_lists = ['struct', 'letter', 'digit', 'symbol']
         for result_list in result_lists:

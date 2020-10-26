@@ -17,7 +17,7 @@ class Analysis(object):
         structure_d = re.compile(r'\d+$')
         structure_s = re.compile(r'\W+$')
         str_dic = {}  # 单元结构词典
-        str_file = open('./analysis_result/passwd_analysis/csdn_strfile.csv', 'w')
+        str_file = open('./analysis_result/passwd_analysis/yahoo_strfile.csv', 'w')
         csv_write = csv.writer(str_file)
         for line in tqdm(self.passwdList, desc='strifile'):  # 将每个密码拆分成单元结构
             letter_list = re.findall(structure_l, str(line))
@@ -169,23 +169,23 @@ class passwdGuess:
         df = DataFrame(columns=('passwd', 'prob'))
         for q in tqdm(range(DIC_NUMS), desc='to_csv'):
             df.loc[res[q][0]] = [res[q][0], res[q][1]]
-        df.to_csv('./analysis_result/passwd_analysis/PasswdGuess_csdn.csv', encoding = 'gb18030',index=False)
+        df.to_csv('./analysis_result/passwd_analysis/PasswdGuess_yahoo.csv', encoding = 'gb18030',index=False)
 
 
 if __name__ == '__main__':
 
     # 读取文件
-    data = pd.read_csv('./analysis_result/passwd_analysis/csdnpw.csv', encoding='gb18030', names=['passwd'])
+    data = pd.read_csv('./analysis_result/passwd_analysis/yahoopw.csv', encoding='gb18030', names=['passwd'])
     passwdList = pd.Series(data['passwd'].values)
 
     # 统计结构数量并得到单元结构词典
     ana = Analysis(passwdList)
-    ana.passwdStruc().to_csv('./analysis_result/passwd_analysis/str_analysis_csdn.csv', index=False)
+    ana.passwdStruc().to_csv('./analysis_result/passwd_analysis/str_analysis_yahoo.csv', index=False)
     ana.LDSunit()
 
     # PCFG生成猜测词典
-    structure_df = pd.read_csv('./analysis_result/passwd_analysis/str_analysis_csdn.csv', encoding='gb18030')
-    csv_file = csv.reader(open('./analysis_result/passwd_analysis/csdn_strfile.csv'))
+    structure_df = pd.read_csv('./analysis_result/passwd_analysis/str_analysis_yahoo.csv', encoding='gb18030')
+    csv_file = csv.reader(open('./analysis_result/passwd_analysis/yahoo_strfile.csv'))
     str_list = []
     for i in csv_file:
         str_list.append(i)

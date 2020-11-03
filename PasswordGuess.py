@@ -3,13 +3,14 @@ import re
 import csv
 import gc
 import pandas as pd
-from pandas import Series, DataFrame
-
+from pandas import DataFrame
+import os
 
 
 class Analysis(object):
-    def __init__(self, passwdList):
+    def __init__(self, passwdList,a):
         self.passwdList = passwdList
+        self.a = a
 
     # 统计每个单元结构所含密码及数量
     def LDSunit(self):
@@ -17,7 +18,7 @@ class Analysis(object):
         structure_d = re.compile(r'\d+$')
         structure_s = re.compile(r'\W+$')
         str_dic = {}  # 单元结构词典
-        str_file = open('./analysis_result/passwd_analysis/yahoo_strfile.csv', 'w')
+        str_file = open('./analysis_result/passwd_analysis/' + self.a + '_strfile.csv', 'w')
         csv_write = csv.writer(str_file)
         for line in tqdm(self.passwdList, desc='strifile'):  # 将每个密码拆分成单元结构
             letter_list = re.findall(structure_l, str(line))
@@ -109,9 +110,10 @@ class Analysis(object):
 #生成密码猜测词典（概率前100）
 DIC_NUMS = 100
 class passwdGuess:
-    def __init__(self, structure_df, str_list):
+    def __init__(self, structure_df, str_list,a):
         self.structure_df = structure_df
         self.str_list = str_list
+        self.a = a
 
     def PCFG_Pre(self):
         stru_dic = {}
@@ -169,29 +171,46 @@ class passwdGuess:
         df = DataFrame(columns=('passwd', 'prob'))
         for q in tqdm(range(DIC_NUMS), desc='to_csv'):
             df.loc[res[q][0]] = [res[q][0], res[q][1]]
-        df.to_csv('./analysis_result/passwd_analysis/PasswdGuess_yahoo.csv', encoding = 'gb18030',index=False)
+        df.to_csv('./analysis_result/passwd_analysis/PasswdGuess_' + self.a + '.csv', encoding = 'gb18030',index=False)
 
-
-if __name__ == '__main__':
-
-    # 读取文件
-    data = pd.read_csv('./analysis_result/passwd_analysis/yahoopw.csv', encoding='gb18030', names=['passwd'])
+def entrance(a):
+    data = pd.read_csv('./analysis_result/passwd_analysis/'+ a +'pw.csv', encoding='gb18030', names=['passwd'])
     passwdList = pd.Series(data['passwd'].values)
 
     # 统计结构数量并得到单元结构词典
-    ana = Analysis(passwdList)
-    ana.passwdStruc().to_csv('./analysis_result/passwd_analysis/str_analysis_yahoo.csv', index=False)
+    ana = Analysis(passwdList,a)
+    ana.passwdStruc().to_csv('./analysis_result/passwd_analysis/str_analysis_' + a + '.csv', index=False)
     ana.LDSunit()
 
     # PCFG生成猜测词典
-    structure_df = pd.read_csv('./analysis_result/passwd_analysis/str_analysis_yahoo.csv', encoding='gb18030')
-    csv_file = csv.reader(open('./analysis_result/passwd_analysis/yahoo_strfile.csv'))
+    structure_df = pd.read_csv('./analysis_result/passwd_analysis/str_analysis_' + a + '.csv', encoding='gb18030')
+    csv_file = csv.reader(open('./analysis_result/passwd_analysis/' + a + '_strfile.csv'))
     str_list = []
     for i in csv_file:
         str_list.append(i)
-    p = passwdGuess(structure_df, str_list)
+    p = passwdGuess(structure_df, str_list,a)
     stru_dic, stru_nums = p.PCFG_Pre()
     p.PCFG_list(stru_dic, stru_nums)
+
+def get_password(run,show,data):
+    file_path = "./analysis_result/passwd_analysis/passwdGuess_csdn.csv"
+    if data == 'yahoo':file_path = "./analysis_result/passwd_analysis/passwdGuess_yahoo.csv"
+    if run:
+        entrance(data)
+    else:
+        if not os.path.exists(file_path):
+            with open(file_path, "w", encoding="utf-8"):
+                print("新建文件")
+        if not os.path.getsize(file_path):
+            print("passwdGuess doesn't get!")
+    if show:
+        if not os.path.getsize(file_path):
+            run()
+        else:
+            pass
+    return
+if __name__ == '__main__':
+    get_password(True,True,'csdn')
 
 
 
